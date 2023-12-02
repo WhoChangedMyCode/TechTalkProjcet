@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/js/jquery-3.6.3.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <link href="/css/main.css" rel="stylesheet"/>
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+    <style>
+        #showType {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .in-style {
+            border: hidden;
+            cursor: pointer; /*设置鼠标指针为手指状*/
+        }
+    </style>
+</head>
+<body>
+<div class="navigationBar">
+    <!-- 加载导航栏 -->
+</div>
+<div class="mainDivStyle">
+
+    <div class="container">
+        <div class="row justify-content-center ">
+            <div class="col-md-auto">
+                <h1>文章类型管理</h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <!-- 创建文章类型 -->
+            <div class="form-row row justify-content-center">
+                <div class="col-1"><label for="typeName">文章类型</label></div>
+                <div class="col-3"><input type="text" class="form-control" id="typeName"/></div>
+                <div class="col-2">
+                    <button class="btn btn-primary form-control" id="btnIssue">创建文章类型</button>
+                </div>
+            </div>
+            <div class="form-row row justify-content-center">
+                <!-- 信息提示 -->
+                <div class="col-3"><label id="typeMsg"></label></div>
+            </div>
+
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-8">
+                <div class="list-group">
+                    <li class="list-group-item list-group-item-action active" aria-current="true">
+                        文章类型列表
+                    </li>
+
+                    <div class="showTypeListTag" id="typeList">
+                        <!-- 文章类型列表 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    $(function () {
+        $('.navigationBar').load("/to/navigation/navigation");
+        // 显示所有的文字类型列表
+        typeList();
+        // 发布文章类型
+        issue();
+        // 删除文章类型
+        typeDel();
+        // 修改文章类型
+        typeUpdate();
+    });
+
+    /**
+     * 发布文章类型
+     */
+    function issue() {
+        $('#btnIssue').click(function () {
+            const typeName = $("#typeName");
+            let typeNameValue = typeName.val();
+            if (typeNameValue === "") {
+                let tag = "<span style='color: red;font-size: small;'>请输入文章类型!</span>";
+                $('#typeMsg').html(tag);
+            } else {
+                let content = {'typeName': typeNameValue};
+                $.ajax({
+                    url: "/type/issue",
+                    type: "post",
+                    data: content,
+                    async: false,
+                    success: function (issueResult) {
+                        typeName.val("");
+                        typeList();
+                    },
+                    error: function () {
+                        console.log("error issue type !")
+                    }
+                });
+            }
+
+        });
+    }
+
+    /**
+     * 文章类型列表
+     */
+    function typeList() {
+        $.ajax({
+            url: "/type/types",
+            type: "post",
+            success: function (types) {
+                const typeList = $("#typeList");
+                typeList.text("");
+                $.each(types, function (i, typeData) {
+                    let text = "<li class='list-group-item list-group-item-light' id='showType'> " +
+                        "文章类型 ：<input class='in-style' type='text'  id='typeDataName' value='" + typeData.typeName + "'>" +
+                        "  <button type='button' class='btn-close btnId' data-bs-dismiss='alert' value='" + typeData.typeId + "'></button></li>";
+                    typeList.append(text);
+                })
+            },
+            error: function () {
+                console.log("error fail !!!")
+            }
+        });
+    }
+
+    /**
+     * 删除文章类型
+     */
+    function typeDel() {
+        $('body').on('click', '.btnId', function () {
+            let typeId = $(this).val();
+            $.ajax({
+                url: "/type/del/" + typeId,
+                type: "post",
+                success: function () {
+                    typeList();
+                }
+            });
+        });
+    }
+
+    /**
+     * 修改文章内容
+     */
+    function typeUpdate() {
+        $('body').on('blur', '#typeDataName', function () {
+            let typeName = $(this).val();
+            let typeId = $(this).siblings(".btnId").val();
+            let content = {'typeName': typeName, 'typeId': typeId};
+            $.ajax({
+                url: "/type/update",
+                type: "post",
+                data: content,
+                success: function (typeUpdateResult) {
+                    if (typeUpdateResult) {
+                        typeList();
+                    }
+                }
+            });
+        });
+    }
+</script>
+</body>
+</html>

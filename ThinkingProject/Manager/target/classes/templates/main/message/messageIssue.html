@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/js/jquery-3.6.3.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <link href="/css/main.css" rel="stylesheet"/>
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+    <script src="/js/wangEditor.min.js"></script>
+
+</head>
+<body>
+<div class="navigationBar">
+    <!-- 导航栏 -->
+</div>
+<div class="">
+    <div class="container">
+        <div class="row">
+            <div class="form-group">
+                <label for="messageTitle">新闻栏目</label>
+                <input type="text" class="form-control" id="messageTitle" placeholder="请输入新闻标题">
+                <label>新闻内容</label>
+                <div id="newBoxDiv">
+                    <!-- wangEditor加载的位置 -->
+                </div>
+            </div>
+        </div>
+        <div class="form-row row justify-content-center">
+            <!-- 信息提示 -->
+            <div class="col-3"><label id="typeMsg"></label></div>
+        </div>
+        <div class="row">
+            <div class="row-cols-4" style="text-align: right">
+                <button type="button" class="btn btn-primary" id="btn-m-issue">发布公告</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var text;
+    // 实例化wangEditor工具
+    const E = window.wangEditor
+    // 加载wangEditor窗体到id=newBoxDiv的DIV
+    const editor = new E('#newBoxDiv');
+    // 配置wangEditor的图片上传信息
+    // 上传文件的名字
+    editor.config.uploadFileName = 'myFile';
+    // 上传图片使用的改后台端口（需要程序员自己编写）
+    // 每次上传照片都会执行一次该操作
+    editor.config.uploadImgServer = '/message/uploadImage';
+    // 每当wangEditor编译器内容改变的时候触发该方法
+    editor.config.onchange = function () {
+        text = editor.txt.html();
+    }
+    // 完成WangEditor的创建
+    editor.create()
+
+    $(function () {
+        $('.navigationBar').load("/to/navigation/navigation");
+        messageIssue();
+    });
+
+    function messageIssue() {
+        $('#btn-m-issue').click(
+            function () {
+                let messageTitle = $('#messageTitle').val();
+                if (messageTitle === "" || typeof (text) === "undefined") {
+                    let tag = "<span style='color: red;font-size: small;'>请输入公告标题或则公告内容</span>";
+                    $('#typeMsg').html(tag);
+                } else {
+                    let message_d = {'messageTitle': messageTitle, 'messageText': text};
+                    $.post('/message/issue', message_d, function (b) {
+                        if (b) {
+                            window.location.href = "/to/main/message/message";
+                        }
+                    });
+                }
+            }
+        );
+    }
+</script>
+</body>
+</html>

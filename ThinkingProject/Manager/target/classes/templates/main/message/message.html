@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/js/jquery-3.6.3.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <link href="/css/main.css" rel="stylesheet"/>
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+    <style>
+        .split-M {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="navigationBar"></div>
+<div class="container">
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="row-cols-12">
+                <div class="list-group">
+                    <li class="list-group-item list-group-item-action active">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">公告</h5>
+                            <small>每日公告</small>
+                        </div>
+                    </li>
+                    <div id="newShow">
+                        <!-- 公告分頁內容顯示 -->
+                    </div>
+                </div>
+            </div>
+            <!-- 分页 -->
+            <div class="row-cols-12" style="margin-top: 10px;">
+                <nav aria-label="...">
+                    <ul class="pagination pagination-sm split-Num">
+
+                    </ul>
+                </nav>
+            </div>
+
+        </div>
+        <!-- 頁面右側公告内容 -->
+        <div class="col-lg-8" id="showAll">
+            <!--標題-->
+            <div class="row-cols-12">
+                <div id="title-s">
+                </div>
+            </div>
+            <div class="row-cols-12">
+                <div id="messageText-s" style="text-align: center;">
+                    <!-- 点击标题后公告信息加载处-->
+                </div>
+                <div id="operation" style="text-align: right; margin-right: 50px;">
+                </div>
+                <!--消息提醒-->
+                <div id="msg" style="text-align: right; margin-right: 50px;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    $(function () {
+        // 加载导航栏到 DIV id = navigationBar
+        $('.navigationBar').load("/to/navigation/navigation");
+        showMessageContentNew();
+        newShows(1);
+        splitM();
+        showMessageContent();
+        messageDel();
+    });
+
+    /**
+     * 分頁查尋的對應頁碼的公告
+     */
+    function newShows(currentPage) {
+        $.ajax({
+                url: "/message/messageList/" + currentPage,
+                type: "post",
+                async: false,
+                success: (mapData) => {
+                    // 公告分頁內容
+                    const newShow = $("#newShow");
+                    newShow.text("");
+                    let messageList = mapData.messages;
+                    $.each(messageList, function (i, message) {
+                        let text = " <li class=\"list-group-item list-group-item-action message—Id cursor-st\" value=" + message.messageId + ">\n" +
+                            "                <div class=\"d-flex w-100 justify-content-between\">\n" +
+                            "                    <h5 class=\"mb-1\">" + message.messageTitle + "</h5>\n" +
+                            "                </div>\n" +
+                            "                <small class=\"text-muted\">" + message.messageTime + "</small>\n" +
+                            "            </li>";
+                        newShow.append(text);
+                    });
+                    // 添加分頁
+                    let allPage = mapData.allPage;
+                    const splitNum = $(".split-Num");
+                    splitNum.text("");
+                    for (i = 1; i <= allPage; i++) {
+                        let splitText = "<li class=\"page-item page-link split-M\" value=" + i + ">" + i + "</li>";
+                        splitNum.append(splitText);
+                    }
+                }
+            }
+        );
+    }
+
+    /**
+     * 分頁對應頁碼按鈕事件
+     */
+    function splitM() {
+        $('body').on('click', '.split-M', function () {
+            let currentPage = $(this).val();
+            newShows(currentPage);
+        });
+    }
+
+    /**
+     * 點擊頁面左側的公告，在頁面右側顯示對應內容
+     */
+    function showMessageContent() {
+        $('body').on('click', '.message—Id', function () {
+            let messageId = $(this).val();
+            $.ajax({
+                url: "/message/byId/" + messageId,
+                type: "post",
+                async: false,
+                success: (messageObject) => {
+                    // 頁面右側標題
+                    const titleS = $("#title-s");
+                    // 頁面右側顯示對應公告下的操作（刪除）
+                    const operation = $("#operation");
+                    titleS.text("");
+                    let title = "<blockquote class=\"blockquote text-center\">\n" +
+                        "<p class=\"mb-0\">" + messageObject.messageTitle + "</p><p>" +
+                        " <footer class=\"blockquote-footer\">于" + messageObject.messageTime + "发布    发布者：<span>" + messageObject.admin.adminName + "</span></footer></p></blockquote>"
+                    titleS.append(title);
+                    $('#messageText-s').html(messageObject.messageText);
+                    operation.text("");
+                    let op = "<span class='cursor-st md' id='messageDel' value-id='" + messageId + "'>删除</span>"
+                    operation.append(op)
+                    $('#msg').html("");
+                }
+            });
+        });
+    }
+
+    /**
+     * 查询最新的一条公告
+     */
+    function showMessageContentNew() {
+        $.ajax({
+            url: "/message/new",
+            type: "post",
+            async: false,
+            success: (messageObject) => {
+                // 頁面右側標題
+                const titleS = $("#title-s");
+                // 頁面右側顯示對應公告下的操作（刪除）
+                const operation = $("#operation");
+                if (messageObject !== "") {
+                    titleS.text("");
+                    let title = "<blockquote class=\"blockquote text-center\">\n" +
+                        "<p class=\"mb-0\">" + messageObject.messageTitle + "</p><p>" +
+                        " <footer class=\"blockquote-footer\">于" + messageObject.messageTime + "发布     发布者：<span>" + messageObject.admin.adminName + "</span></footer></p></blockquote>"
+                    titleS.append(title);
+                    // 頁面右側公告內容
+                    $('#messageText-s').html(messageObject.messageText);
+                    operation.text("");
+                    // 頁面右側最新公告下方的是刪除按鈕
+                    let op = "<span class='cursor-st md' id='messageDel' value-id='" + messageObject.messageId + "'>删除</span>"
+                    operation.append(op)
+                    $('#msg').html("");
+                } else {
+                    titleS.text("");
+                    operation.text("");
+                    $('#msg').html("");
+                }
+            }
+        });
+    }
+
+    /**
+     * 點擊刪除按鈕，刪除對應的公告
+     */
+    function messageDel() {
+        $('body').on('click', '#messageDel',
+            function () {
+                let messageId = $(this).attr("value-id");
+                $.ajax({
+                    url: '/messageOp/messageDel/' + messageId,
+                    type: 'post',
+                    async: false,
+                    success: (resultBoolean) => {
+                        if (resultBoolean) {
+                            clean();
+                            newShows(1);
+                            showMessageContentNew();
+                        }
+                    },
+                    error: function () {
+                        $('#msg').html("<span style='color: red;font-size: small;'>没有权限删除该该公告！！！</span>");
+                    }
+                })
+            });
+    }
+
+    function clean() {
+        $('#title-s').text("");
+        $('#messageText-s').text("");
+        $('#operation').text("");
+        $('#msg').html("");
+    }
+</script>
+</html>

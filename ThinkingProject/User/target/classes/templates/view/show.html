@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script th:src="@{/js/jquery-3.2.1.min.js}"></script>
+</head>
+<body>
+<div id="navigationBar">
+</div>
+<div class="mainDivStyle">
+    <h1>个人信息</h1>
+    <label>
+        编号：
+        <input th:value="${session.human.humanId}" disabled="disabled"/>
+    </label>
+    <label>
+        姓名：
+        <input th:value="${session.human.humanName}" id="humanName"/>
+    </label>
+    <label>
+        邮箱：
+        <input th:value="${session.human.humanEmail}" id="humanEmail"/>
+    </label>
+    <label>
+        暱稱：
+        <input th:value="${session.human.humanNiceName}" id="humanNiceName"/>
+    </label>
+    <label>
+        描述：
+        <input th:value="${session.human.humanDescribe}" id="humanDescribe"/>
+    </label>
+    <button id="updateInfoButton">修改</button>
+</div>
+</body>
+<script>
+    $(function () {
+        $("#navigationBar").load("/to/base/navigation");
+        $("#updateInfoButton").click(updateInfo);
+    });
+
+    /**
+     * 修改个人信息
+     */
+    function updateInfo() {
+        let humanName = $("#humanName").val();
+        let humanEmail = $("#humanEmail").val();
+        let humanNiceName = $("#humanNiceName").val();
+        let humanDescribe = $("#humanDescribe").val();
+        if (humanName === "" || humanEmail === "" || humanNiceName === "" || humanDescribe === "") {
+            alert("请填写完整信息");
+        } else {
+            let jsonData = {
+                "humanName": humanName,
+                "humanEmail": humanEmail,
+                "humanNiceName": humanNiceName,
+                "humanDescribe": humanDescribe
+            }
+            $.ajax({
+                url: "/updateInfo",
+                type: "POST",
+                data: jsonData,
+                success: (booleanResult) => {
+                    if (booleanResult) {
+                        location.reload();
+                    } else {
+                        alert("修改失败,請稍後再試");
+                    }
+                }
+            })
+        }
+    }
+</script>
+</html>

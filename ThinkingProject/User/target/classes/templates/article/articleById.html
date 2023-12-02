@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css"/>
+    <link href="/css/main.css" rel="stylesheet"/>
+    <link href="/css/LikeAndDislike.css" rel="stylesheet"/>
+    <script type="text/javascript" src="/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="/js/wangEditor.min.js"></script>
+</head>
+<body>
+<div id="navigationBar">
+</div>
+
+<div class="mainDivStyle">
+    <div class="container">
+        <p>
+            <span id="titleStyle" th:text="${article.articleTitle}"></span>
+        </p>
+        <p>
+            <span th:text="${article.human.humanNiceName}"></span>
+            发布时间：<span th:text="${#dates.format(article.articleIssueTime,'yyyy年MM月dd日 HH时mm分ss秒')}"></span>
+        </p>
+        <p><span id="contentStyle" th:utext="${article.articleContent }"></span></p>
+        <div th:if="${session.human != null}">
+            <div th:if="${session.human.humanId} eq ${article.humanId}">
+                <div class="aStyle">
+                    <a th:href="@{'/to/article/articleupdate?articleId='+${article.articleId}}">修改文章</a>
+                </div>
+                <div class="aStyle">
+                    <a th:href="@{'/article/del/'+${article.articleId}}">删除文章</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr>
+    <div>
+        <div class="container">
+            <div id="replyEditor" style="width: 666px;"></div>
+            <textarea id="replyContent" style="display: none;"></textarea>
+            <p>
+                <button id="replyButton">发布回复</button>
+            </p>
+        </div>
+    </div>
+    <hr>
+    <div class="container">
+        <div id="reply-show">
+            <!--  回覆顯示  -->
+        </div>
+        <div>
+            <nav aria-label="...">
+                <ul class="pagination pagination-sm reply-split">
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    const E = window.wangEditor;
+    const editor = new E("#replyEditor");
+    //定义wangEditor图片文件的名字
+    editor.config.uploadFileName = 'file';
+    // editor.config.uploadImgMaxLength = 5 // 一次最多上传 5 个图片
+    // wangEditor上传文件触发该事件 editor.config.uploadImgServer
+    editor.config.height = 168
+    editor.config.uploadImgServer = '/issue/article-image-upload';
+    const replyContent = $("#replyContent");
+    editor.config.onchange = function (data) {
+        replyContent.val(data);
+    }
+    editor.create();
+    // 获取后端传递的对象值
+    var articleId = [[${article.articleId}]];
+
+    $(function () {
+        $("#navigationBar").load("/to/base/navigation");
+        // 分頁显示指定文章的回复信息
+        ajaxQueryReply(1);
+        $("#replyButton").click(() => {
+                issueClick();
+                editor.txt.clear();
+            }
+        );
+        // 删除回复信息
+        deleteReplyById();
+        // 點讚、點踩按鈕
+        clickLike();
+        clickDislike();
+        // 回覆按鈕
+        // 回覆指定的回覆
+        showInput();
+
+        // 一級回覆點讚、點踩按鈕
+        clickLeve1ReplyLike();
+        clickLeve1ReplyDislike();
+        // 删除一级回复
+        clickLevel1ReplyDelete();
+        // 一級回覆
+        clickLevel1ReplySpan();
+    });
+
+    /**
+     * 分頁显示指定文章的回复信息
+     *
+     * @param currentPage
+     */
+    function ajaxQueryReply(currentPage) {
+        $.ajax({
+            url: "/reply/split/" + articleId + "/" + currentPage,
+            type: "POST",
+            success: (resultMap) => {
+                if (resultMap != null) {
+                    // 將後台返回的文章回復數據加載到頁面上
+                    showReply(resultMap, currentPage);
+                }
+            },
+            error: () => {
+                console.log("ajax请求失败");
+            },
+        });
+    }
+
+    /**
+     * 將後台返回的文章回復數據加載到頁面上
+     * @param resultMap
+     * @param currentPage
+     */
+    function showReply(resultMap, currentPage) {
+        const replyShow = $("#reply-show");
+        const replySplit = $(".reply-split");
+        // 清除回复信息
+        replyShow.html("");
+        // 清除分页码
+        replySplit.html("");
+        // 回复信息
+        let replyList = resultMap.replyList;
+        let humanIdNav = $("#humanIdNav").text();
+        $.each(replyList, function (i, reply) {
+                let replyContentDiv = $("<div></div>");
+                replyContentDiv.append("<p>" + reply.human.humanNiceName + " 回覆於：" + reply.replyTime + "</p>");
+                replyContentDiv.append("<div>" + reply.replyContent + "</div>");
+
+                let replyOperation = $("<div></div>");
+                // 回复信息的ID
+                replyOperation.attr('reply_operation_Id', reply.replyId);
+                // 回复信息的点赞
+                replyOperation.append("<button class='like-style reply-like'>" +
+                    " <i class='fa fa-thumbs-o-up' aria-hidden='true\'>&#128077;</i>" +
+                    " </button>");
+                replyOperation.append("<span class='like-count-span'>" + reply.replyLikeCount + "</span>");
+                // 回复信息的点踩
+                replyOperation.append("<button class='dislike-style reply-dislike'>" +
+                    " <i class='fa fa-thumbs-o-down' aria-hidden='true'>&#128078;</i>" +
+                    " </button>");
+                replyOperation.append("<span class='dislike-count-span'>" + reply.replyDislikeCount + "</span>");
+
+                if (humanIdNav == reply.humanId) {
+                    replyOperation.append("<span class='replyOperationStyle lv0-delete-span'>删除</span>");
+                }
+                replyOperation.append("<span class='replyOperationStyle lv0-reply-span'>回覆</span>");
+
+                let replyContainer = $("<div class='reply-container'></div>");
+                replyContainer.append(replyContentDiv);
+                replyContainer.append(replyOperation);
+
+                // 加載一級回覆
+                let replyId = reply.replyId;
+                showLevel1Reply(replyContainer, replyId, humanIdNav);
+
+                replyShow.append(replyContainer);
+            }
+        );
+
+        let pageNum = resultMap.allPage;
+        for (j = 1; j <= pageNum; j++) {
+            let bullet = $("<li class='page-item'><span class='page-link'></span></li>");
+            if (currentPage === j) {
+                // 給當前頁的按鈕添加高亮顯示
+                bullet.find("span").addClass("active");
+            }
+            bullet.find("span").attr("page", j);
+            bullet.find("span").text(j);
+            // 邦定點擊事件
+            bullet.find("span").click(bulletClick);
+            replySplit.append(bullet);
+        }
+    }
+
+    /**
+     * 分頁按鈕點擊事件
+     */
+    function bulletClick() {
+        let page = $(this).attr("page");
+        // 分頁显示指定文章的回复信息
+        ajaxQueryReply(page);
+    }
+
+    /**
+     * 發佈對應文章的回复信息
+     */
+    function issueClick() {
+        let replyJson = {'replyContent': replyContent.val(), 'articleId': articleId};
+        $.ajax({
+            url: "/reply/issue",
+            type: "POST",
+            data: replyJson,
+            success: () => {
+                // 分頁显示指定文章的回复信息
+                ajaxQueryReply(1);
+                replyContent.val("");
+                replyContent.text("");
+            },
+            error: () => {
+                alert("ajax请求失败");
+            },
+        });
+    }
+
+    /**
+     * 删除lv0回覆
+     */
+    function deleteReplyById() {
+        $("body").on("click", ".lv0-delete-span", function () {
+            if (confirm("是否確定刪除該回覆？")) {
+                let reply_operation_Id = $(this).parent().attr("reply_operation_Id");
+                $.ajax({
+                    url: "/reply/del/" + reply_operation_Id,
+                    type: "POST",
+                    success: (deleteBoolean) => {
+                        if (deleteBoolean) {
+                            // 分頁显示指定文章的回复信息
+                            ajaxQueryReply(1);
+                        } else {
+                            alert("刪除失败");
+                        }
+                    }
+                })
+            }
+        })
+    }
+
+    /**
+     * lv0的回覆
+     */
+    function showInput() {
+        $("body").on("click", ".lv0-reply-span", function () {
+            // 緩存this，否則在ajax的回調函數success中$(this)已經發生變化
+            // 導致let replyContainer = $(this).parents(".reply-container");和預期效果不同
+            const self = $(this);
+
+            // 創建一個輸入框
+            const input = document.createElement('input');
+            input.type = 'text';
+
+            // 設置輸入框的其他屬性和樣式
+            input.placeholder = '輸入回覆內容';
+            input.style.marginLeft = '50px';
+
+            // 設置輸入框的事件，比如按Enter鍵時觸發一些操作
+            input.addEventListener('keyup', function (event) {
+                if (event.key === 'Enter') {
+                    let replyId = $(this).parent().attr("reply_operation_Id");
+                    let paramJson = {replyId: replyId, level1ReplyContent: input.value};
+                    // 發送回覆到後端
+                    $.ajax({
+                        url: "/level1Reply/insertLevel1Reply",
+                        type: "POST",
+                        data: paramJson,
+                        success(insertResult) {
+                            if (insertResult) {
+                                // 获取页面中 id 为 "humanIdNav" 的元素的文本内容，并赋值给变量 humanIdNav
+                                let humanIdNav = $("#humanIdNav").text();
+                                // 获取当前元素的父元素的 class 为 "reply-container" 的元素，并赋值给变量 replyContainer
+                                let replyContainer = self.parents(".reply-container");
+                                // 调用 showLevel1Reply 函数，传入 replyContainer、replyId 和 humanIdNav 作为参数
+                                showLevel1Reply(replyContainer, replyId, humanIdNav);
+                                // 回車後移除輸入框
+                                input.parentNode.removeChild(input);
+                            } else {
+                                alert("回覆失败");
+                            }
+                        }
+                    })
+                }
+            });
+            // 插入到<span>的後面
+            self.after(input);
+            // 將焦點設置到輸入框，讓用戶可以直接開始輸入
+            input.focus();
+            // 設置失去焦點事件，移除輸入框
+            iinput.addEventListener('blur', function () {
+                // 檢查 input 的父節點是否存在
+                if ($(this).parent().length) {
+                    // 延遲執行，確保在 ajax 請求完成後再移除節點
+                    setTimeout(() => {
+                        // 使用 jQuery 對象來刪除節點
+                        $(this).parent().remove();
+                    }, 0);
+                }
+            });
+        });
+    }
+
+    /**
+     * 加載一級回覆
+     */
+    function showLevel1Reply(replyContainer, replyId, humanIdNav) {
+        $.ajax({
+            url: "/level1Reply/listLevel1ReplyByReplyId",
+            type: "POST",
+            data: {replyId: replyId},
+            success(level1ReplyListResult) {
+                if (level1ReplyListResult != null) {
+                    $.each(level1ReplyListResult, function (i, level1Reply) {
+                        let level1ReplyContentDiv = $("<div></div>");
+                        level1ReplyContentDiv.append("<p>" + level1Reply.human.humanNiceName + " 回覆於：" + level1Reply.level1ReplyTime + "</p>");
+                        level1ReplyContentDiv.append("<div style='margin-bottom:15px'>" + level1Reply.level1ReplyContent + "</div>");
+
+                        let level1ReplyOperation = $("<div></div>");
+                        // 一級回覆的ID
+                        level1ReplyOperation.attr('level1_reply_operation_id', level1Reply.level1ReplyId);
+                        // 一級回覆的的点赞
+                        level1ReplyOperation.append("<button class='like-style level1-like'>" +
+                            " <i class='fa fa-thumbs-o-up' aria-hidden='true\'>&#128077;</i>" +
+                            " </button>");
+                        level1ReplyOperation.append("<span class='like-count-span'>" + level1Reply.level1ReplyLikeCount + "</span>");
+                        // 一級回覆的的点踩
+                        level1ReplyOperation.append("<button class='dislike-style level1-dislike'>" +
+                            " <i class='fa fa-thumbs-o-down' aria-hidden='true'>&#128078;</i>" +
+                            " </button>");
+                        level1ReplyOperation.append("<span class='dislike-count-span'>" + level1Reply.level1ReplyDislikeCount + "</span>");
+                        // 一級回覆的的删除，只有作者自己才能删除
+                        if (humanIdNav == level1Reply.humanId) {
+                            level1ReplyOperation.append("<span class='replyOperationStyle lv1-delete-span'>删除</span>");
+                        }
+                        level1ReplyOperation.append("<span class='replyOperationStyle lv1-reply-span'>回覆</span>");
+
+                        let level1ReplyContainer = $("<div class='level1-reply-container'></div>");
+                        level1ReplyContainer.append(level1ReplyContentDiv);
+                        level1ReplyContainer.append(level1ReplyOperation);
+
+                        replyContainer.append(level1ReplyContainer);
+                    })
+                }
+            }
+        })
+    }
+
+    /**
+     * 点赞lv0回覆
+     */
+    function clickLike() {
+        $("body").on("click", ".reply-like", function () {
+            const replyOperation = $(this).parent();
+            let reply_operation_id = replyOperation.attr("reply_operation_Id");
+            $.ajax({
+                url: "/reply/updateLikeCount",
+                type: "POST",
+                data: {replyId: reply_operation_id},
+                success(updateResult) {
+                    if (updateResult) {
+                        // 更新赞的數量
+                        let oldLikeCountSpan = replyOperation.find(".like-count-span");
+                        let oldLikeCountNumber = parseInt(oldLikeCountSpan.text());
+                        oldLikeCountSpan.text(oldLikeCountNumber + 1);
+                    } else {
+                        alert("点赞失败,请重试!")
+                    }
+                }
+            })
+        })
+    }
+
+    /**
+     * 点踩lv0回覆
+     */
+    function clickDislike() {
+        $("body").on("click", ".reply-dislike", function () {
+            const replyOperation = $(this).parent();
+            let reply_operation_id = replyOperation.attr("reply_operation_Id");
+            $.ajax({
+                url: "/reply/updateDislikeCount",
+                type: "POST",
+                data: {replyId: reply_operation_id},
+                success(updateResult) {
+                    if (updateResult) {
+                        // 更新踩的數量
+                        let oldDislikeCountSpan = replyOperation.find(".dislike-count-span");
+                        let oldDislikeCountNumber = parseInt(oldDislikeCountSpan.text());
+                        oldDislikeCountSpan.text(oldDislikeCountNumber + 1);
+                    } else {
+                        alert("点踩失败,请重试!");
+                    }
+                }
+            })
+        })
+    }
+
+    /**
+     * 点赞指定的一級回覆
+     */
+    function clickLeve1ReplyLike() {
+        $("body").on("click", ".level1-like", function () {
+            const level1ReplyOperation = $(this).parent();
+            let level1_reply_operation_id = level1ReplyOperation.attr("level1_reply_operation_id");
+            $.ajax({
+                url: "/level1Reply/updateLeve1ReplyLikeCount",
+                type: "POST",
+                data: {level1ReplyId: level1_reply_operation_id},
+                success(updateBoolean) {
+                    if (updateBoolean) {
+                        // 更新一級回覆的点赞數
+                        let oldLikeCountSpan = level1ReplyOperation.find(".like-count-span");
+                        let oldLikeCountNumber = parseInt(oldLikeCountSpan.text());
+                        oldLikeCountSpan.text(oldLikeCountNumber + 1);
+                    } else {
+                        alert("点赞失败,请重试!")
+                    }
+                }
+            })
+        })
+    }
+
+    /**
+     * 点踩指定的一級回覆
+     */
+    function clickLeve1ReplyDislike() {
+        $("body").on("click", ".level1-dislike", function () {
+            const level1ReplyOperation = $(this).parent();
+            let level1_reply_operation_id = level1ReplyOperation.attr("level1_reply_operation_id");
+            $.ajax({
+                url: "/level1Reply/updateLeve1ReplyDislikeCount",
+                type: "POST",
+                data: {level1ReplyId: level1_reply_operation_id},
+                success(updateBoolean) {
+                    if (updateBoolean) {
+                        // 更新一級回覆的点踩數
+                        let oldDislikeCountSpan = level1ReplyOperation.find(".dislike-count-span");
+                        let oldDislikeCountNumber = parseInt(oldDislikeCountSpan.text());
+                        oldDislikeCountSpan.text(oldDislikeCountNumber + 1);
+                    } else {
+                        alert("点踩失败,请重试!");
+                    }
+                }
+            })
+        })
+    }
+
+    /**
+     * 删除指定的一級回覆
+     */
+    function clickLevel1ReplyDelete() {
+        $("body").on("click", ".lv1-delete-span", function () {
+            if (confirm("是否确认删除?")) {
+                const level1ReplyOperation = $(this).parent();
+                let level1_reply_operation_id = level1ReplyOperation.attr("level1_reply_operation_id");
+                $.ajax({
+                    url: "/level1Reply/deleteLevel1ReplyById",
+                    type: "POST",
+                    data: {level1ReplyId: level1_reply_operation_id},
+                    success(deleteBoolean) {
+                        if (deleteBoolean) {
+                            // 删除一級回覆
+                            level1ReplyOperation.parents(".level1-reply-container").remove();
+                        } else {
+                            alert("删除失败,请重试!");
+                        }
+                    }
+                })
+            }
+        })
+    }
+
+    /**
+     * 点击一級回覆
+     */
+    function clickLevel1ReplySpan() {
+        $("body").on("click", ".level1-reply-span", function () {
+            alert("功能開發中.....");
+        })
+    }
+</script>
+</body>
+</html>

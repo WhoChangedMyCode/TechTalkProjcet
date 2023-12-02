@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/js/jquery-3.6.3.min.js"></script>
+    <script src="/js/popper.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="/css/main.css" rel="stylesheet"/>
+</head>
+<body>
+
+<div class="divStyle">
+    <form action="/login" method="post">
+        <div class="form-group">
+            <label>
+                用户名
+                <input type="text" name="humanName" class="form-control" value="demo">
+            </label>
+        </div>
+        <div class="form-group">
+            <label>
+                密码
+                <input type="password" name="humanPassword" class="form-control" value="demo">
+            </label>
+        </div>
+        <div class="btmStyle">
+            <button type="submit" class="btn btn-primary btm">登录</button>
+            <a th:href="@{/to/register}">注册</a>
+        </div>
+    </form>
+</div>
+</body>
+</html>

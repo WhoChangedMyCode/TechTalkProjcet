@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/js/jquery-3.6.3.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <link href="/css/main.css" rel="stylesheet"/>
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <style>
+        .loginStyle {
+            margin: 0 auto;
+
+        }
+
+        .box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <div class="loginStyle"
+         style="width: 500px; height: 300px ;border-radius: 5px;padding:0 50px;">
+        <form th:action="@{/login}" method="post">
+            <div class="form-group">
+                <label>
+                    工号
+                    <input type="text" class="form-control" id="adminName" name="adminName" value="admin">
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    密码
+                    <input type="password" class="form-control" id="adminPassword" name="adminPassword" value="admin">
+                </label>
+            </div>
+            <button class="btn btn-primary" id="btnLogin">管理员登录</button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

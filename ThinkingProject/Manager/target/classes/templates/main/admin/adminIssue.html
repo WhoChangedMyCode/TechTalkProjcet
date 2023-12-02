@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/jquery-3.6.3.min.js"></script>
+    <link href="/css/main.css" rel="stylesheet"/>
+
+
+    <style>
+        #showType {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .in-style {
+            border: hidden;
+            cursor: pointer; /*设置鼠标指针为手指状*/
+        }
+
+        .headStyle {
+            width: 48px;
+            height: 48px;
+            border-radius: 100%;
+        }
+
+        .adminStyle {
+            display: flex;
+            align-items: center;
+            height: 60px;
+        }
+
+        .splitStyle {
+            display: block;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="navigationBar">
+</div>
+<div class="mainDivStyle">
+    <div class="container">
+        <div class="row justify-content-center ">
+            <div class="col-md-auto">
+                <h1>管理员信息维护页面</h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="form-row row justify-content-center">
+                <!-- 创建管理员 -->
+                <div class="col-1"><label for="adminName">管理员账号</label></div>
+                <div class="col-2"><input type="text" class="form-control" id="adminName"/></div>
+                <div class="col-1"><label for="adminPassword">管理员密码</label></div>
+                <div class="col-2"><input type="text" class="form-control" id="adminPassword"/></div>
+                <div class="col-1"><label for="adminBirthday">出生日期</label></div>
+                <div class="col-2"><input type="date" class="form-control" id="adminBirthday"/></div>
+                <div class="col-2">
+                    <button class="btn btn-primary form-control" id="btnIssue">创建管理员</button>
+                </div>
+            </div>
+            <div class="form-row row justify-content-center">
+                <div class="col-3"><label id="adminInfoMsg"></label></div>
+            </div>
+
+        </div>
+        <div class="row justify-content-center">
+
+            <div class="col-12">
+                <div class="list-group">
+                    <li class="list-group-item list-group-item-action active" aria-current="true">
+                        管理员信息列表
+                    </li>
+
+                    <div class="showTypeListTag" id="adminList">
+                        <!--  显示管理员列表信息-->
+                    </div>
+                </div>
+            </div>
+
+            <nav class="col-12 splitStyle">
+                <ul class="pagination pagination-sm split-s">
+                    <!-- 分页页码 -->
+                </ul>
+            </nav>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    /**
+     * JS启动入口
+     */
+    $(function () {
+        $('.navigationBar').load("/to/navigation/navigation");
+        adminListView(1);
+        adminIssue();
+        adminUpdatePasswordById();
+        toPage();
+        toAuthority();
+    })
+
+    /**
+     * 创建新管理员
+     */
+    function adminIssue() {
+        $('#btnIssue').click(
+            function () {
+                const adminName = $("#adminName");
+                const adminPassword = $('#adminPassword');
+                const adminBirthday = $('#adminBirthday');
+                const adminInfoMsg = $("#adminInfoMsg");
+                if (adminName.val() === "" || adminPassword.val() === "" || adminBirthday.val() === "") {
+                    adminInfoMsg.html("<span style='color: red;font-size: small;'>请填写所有文本框内容！！！</span>")
+                } else {
+                    let adminJson = {
+                        'adminName': adminName.val(),
+                        'adminPassword': adminPassword.val(),
+                        'adminBirthday': adminBirthday.val()
+                    };
+                    $.ajax({
+                        url: "/admin/issue",
+                        type: "post",
+                        async: false,
+                        data: adminJson,
+                        success: function (result) {
+                            if (result) {
+                                adminInfoMsg.html("<span style='color: green;font-size: small;'>创建成功！！！</span>")
+                                // 創建成功後，清空輸入框並重新請求分頁第一頁的內容
+                                adminName.val("");
+                                adminPassword.val("");
+                                adminBirthday.val("");
+                                adminInfoMsg.text("");
+                                adminListView(1);
+                            } else {
+                                adminInfoMsg.html("<span style='color: red;font-size: small;'>创建失败！！！</span>")
+                            }
+                        }
+                    });
+                }
+            }
+        );
+    }
+
+    /**
+     * 显示指定页码展示内容
+     * @param currPage
+     */
+    function adminListView(currPage) {
+        $.ajax({
+            // 這是另外一種方法，除了使用JSON傳遞currPage參數之外，也可以通過url傳遞
+            url: "/admin/adminList/" + currPage,
+            type: "post",
+            success: function (mapData) {
+                $('#adminList').text("");
+                let admins = mapData.admins;
+                $.each(admins, function (i, admin) {
+                    // 獲取頭像
+                    let head = admin.adminHead;
+                    if (head === null) {
+                        // 如果頭像不存在，就顯示默認頭像
+                        head = "/image/Tux.svg";
+                    } else {
+                        head = "/head/" + head;
+                    }
+                    // 把每页显示的内容添加到指定的容器中  $('#adminList').append(text)
+                    let text = "<li class='list-group-item list-group-item-light adminStyle' id='showType'> " +
+                        "<img src='" + head + "' class='headStyle'>" +
+                        "工号 ：<input class='in-style' type='text'  disabled='disabled' id='adminName' value='" + admin.adminName + "'>" +
+                        "登录密码 ：<input class='in-style' type='text' adid='" + admin.adminId + "' id='adminPassword' value='" + admin.adminPassword + "'>" +
+                        "出生日期 ：<input class='in-style' type='text'  disabled='disabled'   value='" + admin.time + "'>"
+                        + " <span class=\"list-group-item active authorityOp cursor-st\" aria-current=\"true\" aid=\"" + admin.adminId + "\">授权</span>"
+                    ;
+                    $('#adminList').append(text)
+                });
+                // 总页数
+                var allPage = mapData.allPage;
+                const splitS = $(".split-s");
+                splitS.text("");
+                for (i = 1; i <= allPage; i++) {
+                    var splitText = "<li class='page-item page-link toPage'>" + i + "</li>";
+                    splitS.append(splitText);
+                }
+            }
+        });
+    }
+
+    /**
+     * 修改密码
+     */
+    function adminUpdatePasswordById() {
+        $('body').on('blur', '#adminPassword', function () {
+            let adminId = $(this).attr("adid");
+            let adminPassword = $(this).val();
+            const adminJson = {'adminId': adminId, 'adminPassword': adminPassword};
+            $.ajax({
+                url: "/admin/update",
+                type: "post",
+                async: false,
+                data: adminJson,
+                success: function () {
+                    adminListView(1);
+                }
+            });
+        });
+    }
+
+    /**
+     * 页码指向显示的数据
+     */
+    function toPage() {
+        $('body').on('click', '.toPage', function () {
+            var i = $(this).text();
+            adminListView(i);
+        });
+    }
+
+    function toAuthority() {
+        $('body').on('click', '.authorityOp', function () {
+            let adminId = $(this).attr("aId");
+            window.location.href = "/to/role/authority/" + adminId;
+        })
+    }
+
+</script>
+</body>
+</html>

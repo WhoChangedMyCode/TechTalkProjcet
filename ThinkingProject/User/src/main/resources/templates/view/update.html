@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/js/jquery-3.6.3.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="/css/main.css" rel="stylesheet"/>
+</head>
+<body>
+<div id="navigationBar"></div>
+
+<div class="mainDivStyle">
+    <div class="divStyle">
+        <form action="/updateHumanPassword" method="post">
+            <div class="form-group">
+                <label>
+                    旧密码
+                    <input type="password" name="oldHumanPassword" class="form-control">
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    新密码
+                    <input type="password" name="humanPassword" class="form-control">
+                </label>
+            </div>
+            <div class="btmStyle">
+                <button class="btn btn-primary btm">修改密码</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $("#navigationBar").load("/to/base/navigation");
+    });
+</script>
+</body>
+</html>

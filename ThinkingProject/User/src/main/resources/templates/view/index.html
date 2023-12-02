@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+    <script src="/js/jquery-3.6.3.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <link href="/css/main.css" rel="stylesheet"/>
+</head>
+
+<body>
+<div id="navigationBar">
+</div>
+
+<div class="mainDivStyle">
+    <div id="hTitle">
+        <h1>个人主页</h1>
+    </div>
+    <!--個人發佈的文章內容-->
+    <div th:if="${articles != null}">
+        <div class="container">
+            <div th:each="article,status:${articles}">
+                <div class="row">
+                    <div class="col-lg-1"></div>
+                    <div class="col-lg-11">
+                        <!--通过文章ID查询文章详细内容-->
+                        <a id="titleStyle" th:href="@{'/article/articleById/'+${article.articleId}}">
+                            <span th:text="${article.articleTitle}"></span>
+                        </a>
+                    </div>
+                </div>
+                <div class="row contextStyle">
+                    <div class="col-lg-1"></div>
+                    <div class="col-lg-1">
+                        <span th:text="${session.human.humanNiceName}"></span>
+                    </div>
+                    <div class="col-lg-5">
+                        <span th:text="|最后修改时间:${#dates.format(article.articleIssueTime,'yyyy年MM月dd日 HH时mm分ss秒')}|"></span>
+                    </div>
+                </div>
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-1"></div>
+                        <div class="col-lg-11">
+                            <span th:utext="${article.articleContent}"></span>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+            </div>
+        </div>
+    </div>
+    <!--分頁頁碼-->
+    <div class="container">
+        <nav aria-label="Page navigation example">
+            <ul class="pagination splitP">
+                <li class="page-item" th:each="index:${#numbers.sequence(1,allPage)}">
+                    <a class="page-link" th:href="@{'/article/articleListbyId/'+${index}}" th:text="${index}"></a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+<script>
+    $(function () {
+        $("#navigationBar").load("/to/base/navigation");
+    });
+</script>
+</body>
+</html>

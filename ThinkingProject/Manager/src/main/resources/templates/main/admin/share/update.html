@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <script src="/js/jquery-3.6.3.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="/css/main.css" rel="stylesheet"/>
+
+</head>
+<body>
+<div id="navigationBar"></div>
+
+<div class="mainDivStyle">
+    <div class="divStyle">
+        <div class="form-group">
+            <label for="oldAdminPassword">旧密码</label>
+            <input type="password" name="oldHumanPassword" class="form-control" id="oldAdminPassword">
+            <label for="oldAdminPassword" id="old_msg"></label>
+        </div>
+        <div class="form-group">
+            <label for="adminPassword">新密码</label>
+            <input type="password" class="form-control" id="adminPassword">
+            <label for="adminPassword" id="new_msg"></label>
+        </div>
+
+        <div class="btmStyle">
+            <button class="btn btn-primary btm" id="bt-update">修改密码</button>
+        </div>
+    </div>
+
+    <input type="hidden" id="old_pass" th:value="${session.admin.adminPassword}">
+</div>
+
+<script>
+
+    function passwordUpdate() {
+        var oldPass = $('#oldAdminPassword').val();
+        var oldPass = $('#oldAdminPassword').val();
+        var newPass = $('#adminPassword').val();
+        if (oldPass === "") {
+            $('#old_msg').html("<span style='color: red;font-size: small;'>请输入原始密码！！！</span>");
+        } else if (newPass === "") {
+            $('#old_msg').text("");
+            $('#new_msg').html("<span style='color: red;font-size: small;'>请输入新密码！！！</span>");
+        } else {
+            $('#old_msg').text("");
+            $('#new_msg').text("");
+            var old_pass = $('#old_pass').val();
+            $.ajax({
+                url: '/admin/matching/' + oldPass + '/' + old_pass,
+                type: 'post',
+                async: false,
+                success: function (b) {
+                    if (b) {
+                        $.ajax({
+                            url: '/admin/update/' + newPass,
+                            type: 'post',
+                            async: false,
+                            success: function (b) {
+                                if (b) {
+                                    window.location.href = "/";
+                                }
+                            },
+                            error: function () {
+                                window.location.href = "/to/main/system";
+                            }
+                        });
+                    } else {
+                        $('#old_msg').html("<span style='color: red;font-size: small;'>原始密码不正确！！！</span>");
+                    }
+                },
+                error: function () {
+                    console.log("失败")
+                }
+            })
+
+        }
+    }
+
+    function updateSubmit() {
+        $("#bt-update").click(
+            function () {
+                passwordUpdate();
+            }
+        );
+    }
+
+    $(function () {
+        $("#navigationBar").load("/to/navigation/navigation");
+        updateSubmit();
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+org/soft/base/Ctrl/ToPageCtrl.class
+org/soft/base/model/Admin.class
+org/soft/base/ThinkingManageApplication.class
+org/soft/base/mapper/TypeDaoMapper.class
+org/soft/base/model/Type.class
+org/soft/base/dao/AdminDao.class
+org/soft/base/mapper/AdminDaoMapper.class
+org/soft/base/dao/TypeDao.class

@@ -1,0 +1,36 @@
+button.like-style {
+    width: 30px;
+    height: 30px;
+    margin: 0 auto;
+    line-heigth: 50px;
+    border-radius: 50%;
+    border-color: rgba(0, 150, 136, 1);
+    border-width: 1px;
+    font-size: 15px;
+}
+
+button.dislike-style {
+    width: 30px;
+    height: 30px;
+    margin: 0 auto;
+    line-heigth: 50px;
+    border-radius: 50%;
+    border-color: rgba(255, 82, 82, 1);
+    border-width: 1px;
+    font-size: 15px;
+}
+
+.like-count-span,
+.dislike-count-span {
+    font-size: 15px;
+    margin: 0 15px;
+}
+
+.like-count-span {
+    color: rgba(0, 150, 136, 1);
+}
+
+.dislike-count-span {
+    color: rgba(255, 82, 82, 1);
+}
+

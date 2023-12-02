@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/js/jquery-3.6.3.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <link href="/css/main.css" rel="stylesheet"/>
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <style>
+        #showType {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .in-style {
+            border: hidden;
+            cursor: pointer; /*设置鼠标指针为手指状*/
+        }
+    </style>
+</head>
+<body>
+<div class="navigationBar">
+
+</div>
+<div class="mainDivStyle">
+
+    <div class="container">
+        <div class="row justify-content-center ">
+            <div class="col-md-auto">
+                <h1>上传工作照片</h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="form-row row justify-content-center">
+                <div class="col-1"><label for="adminHead">选择头像</label></div>
+                <div class="col-3"><input type="file" class="form-control" id="adminHead"/></div>
+                <div class="col-2">
+                    <button class="btn btn-primary form-control" id="btnHeadIssue">发布头像</button>
+                </div>
+            </div>
+            <div class="form-row row justify-content-center">
+                <div class="col-3"><label id="typeMsg"></label></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(function () {
+        $('.navigationBar').load("/to/navigation/navigation");
+        adminHeadCreate();
+    })
+
+    /**
+     * 更新頭像
+     */
+    function adminHeadCreate() {
+        $('#btnHeadIssue').click(function () {
+            let head = new FormData();
+            head.append('adminHead', $('#adminHead')[0].files[0]);
+            $.ajax({
+                url: '/admin/head',
+                type: 'POST',
+                cache: false,
+                processData: false,
+                contentType: false,
+                data: head,
+                success: function (b) {
+                    console.log("头像跟换成功")
+                    window.location.href = "/to/main/message/message";
+                }
+            })
+        });
+    }
+</script>
+</body>
+</html>

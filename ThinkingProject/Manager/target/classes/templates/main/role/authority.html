@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/js/jquery-3.6.3.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <link href="/css/main.css" rel="stylesheet"/>
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="navigationBar">
+</div>
+<div class="container">
+    <div class="row">
+        <div class="row-cols-8">
+            <p>
+                已授权
+                <span th:text="${param.adminId}"></span>
+            </p>
+            <div class="form-check" id="alreadyAuthorizedContent">
+                <!-- 展示已授权名称 -->
+            </div>
+        </div>
+        <hr>
+        <div class="row-cols-8">
+            <p>
+                未授权
+            </p>
+            <div class="form-check" id="notAuthorizedContent">
+                <!-- 展示未授权名称 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" th:inline="javascript">
+    // 获取浏览完传递参数adminId的值
+    const adminId = [[${adminId}]];
+    $(function () {
+        $('.navigationBar').load("/to/navigation/navigation");
+        showRoleList();
+        opAuthority();
+    });
+
+    function showRoleList() {
+        $.ajax({
+            url: "/relation/rolesAll/" + adminId,
+            type: "post",
+            async: false,
+            success: function (data) {
+                const alreadyAuthorizedContent = $('#alreadyAuthorizedContent');
+                const notAuthorizedContent = $('#notAuthorizedContent');
+
+                // 已有權限
+                let alreadyAuthorized = data.alreadyAuthorized;
+                alreadyAuthorizedContent.text("");
+                $.each(alreadyAuthorized, function (i, roleA) {
+                    var text = " <input type=\"checkbox\" class=\"ac\"  name=\"roleListById\"  checked=\"checked\" value=\"" + roleA.roleId + "\">\n" +
+                        "<label>" + roleA.roleDesc + "</label>";
+                    alreadyAuthorizedContent.append(text)
+                });
+                // 未有權限
+                let notAuthorized = data.notAuthorized;
+                notAuthorizedContent.text("");
+                $.each(notAuthorized, function (i, roleR) {
+                    var text = " <input type=\"checkbox\" class=\"ac\" name=\"roleListById\" value=\"" + roleR.roleId + "\">\n" +
+                        "<label>" + roleR.roleDesc + "</label>";
+                    notAuthorizedContent.append(text)
+                });
+            }
+        });
+    }
+
+    /**
+     * 操作权限
+     */
+    function opAuthority() {
+        $('body').on('change', 'input[class="ac"]', function () {
+            if ($(this).is(":checked")) {
+                let roleId = $(this).val();
+                let relation = {'roleId': roleId, 'adminId': adminId};
+
+                if (confirm("是否确定授权")) {
+                    $.ajax({
+                        url: "/relation/issue",
+                        type: "post",
+                        data: relation,
+                        success(b) {
+                            showRoleList();
+                        }
+                    })
+                } else {
+                    $(this).prop("checked", false);
+                }
+            } else {
+                var roleId = $(this).val();
+                var relation = {'roleId': roleId, 'adminId': adminId};
+                if (confirm("是否确定取消授权")) {
+                    $.ajax({
+                        url: "/relation/delete",
+                        type: "post",
+                        data: relation,
+                        success(b) {
+                            showRoleList();
+                        }
+                    })
+                } else {
+                    $(this).prop("checked", true);
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script th:src="@{/js/wangEditor.min.js}"></script>
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+    <script src="/js/jquery-3.6.3.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <link href="/css/main.css" rel="stylesheet"/>
+</head>
+<body>
+<div id="navigationBar"></div>
+<div class="mainDivStyle">
+    <div class="container">
+        <div class="row justify-content-md-center">
+            <div class="col col-lg-10">
+                <form action="/article/update" method="post">
+                    <input name="articleId" type="hidden" id="articleId"/>
+                    <div class="form-group">
+                        <label for="articleTitle">发布文章标题</label>
+                        <textarea class="form-control" name="articleTitle" id="articleTitle" rows="2"></textarea>
+                        <select id="typeSelect" name="typeId" class="form-control"></select>
+                    </div>
+                    <p>
+                        内容：<textarea name="articleContent" id="articleContent" style="display: none"></textarea>
+                    </p>
+                    <div id="div1" style="width: 100%;"></div>
+                    <div class="btmStyle">
+                        <button class="btn btn-primary btm">修改发布信息</button>
+                        <hr>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+<script type="text/javascript">
+    const E = window.wangEditor;
+    const editor = new E("#div1");
+    //定义wangEditor图片文件的名字
+    editor.config.uploadFileName = 'file';
+    // wangEditor上传文件触发该事件 editor.config.uploadImgServer
+    editor.config.uploadImgServer = '/issue/article-image-upload';
+    editor.config.onchange = function (data) {
+        $("#articleContent").val(data);
+    }
+    editor.create();
+
+    let articleId = [[${param.articleId}]];
+
+    $(function () {
+        $("#navigationBar").load("/to/base/navigation");
+        loadTypes();
+        loadArticleInfo();
+    });
+
+    /**
+     * 加载文章信息
+     */
+    function loadArticleInfo() {
+        $.post("/issue/getArticleById/" + articleId, function (articleData) {
+            editor.txt.html(articleData.articleContent);
+            $("#articleTitle").val(articleData.articleTitle);
+            $("#articleId").val(articleData.articleId);
+            let options = $("<option selected='selected'></option>");
+            if (articleData.typeId > 0) {
+                options.text(articleData.type.typeName);
+                options.val(articleData.typeId);
+            } else {
+                options.text("没有选择类型");
+            }
+            $("#typeSelect").append(options);
+        })
+    }
+
+    /**
+     * 加载文章类型
+     */
+    function loadTypes() {
+        $.ajax({
+            url: "/type/typeList",
+            type: "POST",
+            success: function (typeList) {
+                let typeSelect = $("#typeSelect");
+                $.each(typeList, function (i, type) {
+                    let options = $("<option></option>");
+                    options.text(type.typeName);
+                    options.val(type.typeId);
+                    typeSelect.append(options);
+                });
+            }
+        });
+    }
+</script>
+</html>

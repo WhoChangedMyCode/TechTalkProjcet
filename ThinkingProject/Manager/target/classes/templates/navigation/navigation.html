@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <title></title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+    <script src="/js/jquery-3.6.3.min.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+
+<input type="hidden" id="adminSession" th:value="${session.admin}"/>
+<header class="p-3 mb-3 border-bottom" style="background-color: #FFFFFF;">
+    <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+            <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-dark text-decoration-none">
+                <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap">
+                    <use xlink:href="#bootstrap"/>
+                </svg>
+            </a>
+
+            <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+                <li><a href="/to/main/system" class="nav-link px-2 link-secondary">主页</a></li>
+                <li><a href="/to/main/message/message" class="nav-link px-2 link-dark">每日公告</a></li>
+                <li>
+                    <div class="dropdown text-end nav-link px-2 link-dark">
+                        <span class="d-block link-dark text-decoration-none dropdown-toggle cursor-st"
+                              data-bs-toggle="dropdown"
+                              aria-expanded="false">员工管理
+                        </span>
+                        <ul class="dropdown-menu text-small">
+                            <li><a class="dropdown-item" href="/to/main/admin/adminIssue">管理员系统</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <div class="dropdown text-end nav-link px-2 link-dark">
+                        <span class="d-block link-dark text-decoration-none dropdown-toggle cursor-st"
+                              data-bs-toggle="dropdown"
+                              aria-expanded="false">内容管理
+                        </span>
+                        <ul class="dropdown-menu text-small">
+                            <li><a class="dropdown-item" href="/to/main/type/typeIssue">内容类型管理</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <div class="dropdown text-end nav-link px-2 link-dark">
+                        <span class="d-block link-dark text-decoration-none dropdown-toggle cursor-st"
+                              data-bs-toggle="dropdown" aria-expanded="false">新闻管理
+                        </span>
+                        <ul class="dropdown-menu text-small">
+                            <li><a class="dropdown-item" href="/to/main/message/messageIssue">公告管理</a></li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+
+            <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
+                <input type="search" class="form-control" placeholder="Search..." aria-label="Search">
+            </form>
+
+            <div class="dropdown text-end">
+                <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    <span th:if="${session.admin == null}">
+                        <img src="/image/Tux.svg" id="imgTag" alt="mdo" width="32" height="32" class="rounded-circle">
+                    </span>
+                    <span th:if="${session.admin != null}">
+                         <img th:src="@{'/head/' + ${session.admin.adminHead}}" alt="mdo" width="32" height="32"
+                              class="rounded-circle">
+                    </span>
+                </a>
+                <ul class="dropdown-menu text-small">
+                    <li>
+                        <a class="dropdown-item" href="/to/main/admin/share/show">个人信息</a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="/to/main/admin/share/adminHead">更换头像</a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="/to/main/admin/share/update">修改密码</a>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li>
+                        <span class="dropdown-item" id="btnLogout" style="cursor: pointer;">退出</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</header>
+
+<script>
+    $(function () {
+        logoutJS();
+        getSession();
+    });
+
+    function logoutJS() {
+        $('#btnLogout').click(
+            function () {
+                $.ajax({
+                    url: "/admin/logout",
+                    type: "post",
+                    success: function () {
+                        window.location.href = "/";
+                    }
+                });
+            }
+        );
+    }
+
+    /**
+     * 使用Spring Security登錄沒有保存Session，所以用此方法設置Session
+     */
+    function getSession() {
+        let adminSession = $('#adminSession').val();
+        if (adminSession === "") {
+            $.ajax({
+                url: '/admin/getAdminSession',
+                type: 'post',
+                async: false,
+            })
+        }
+    }
+</script>
+</body>
+</html>
