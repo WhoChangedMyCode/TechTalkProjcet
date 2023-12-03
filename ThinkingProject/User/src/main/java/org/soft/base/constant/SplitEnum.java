@@ -24,7 +24,7 @@ public enum SplitEnum {
 	/**
 	 * 文章图片上传路径
 	 */
-	ARTICLE_IMAGE_UPLOAD_PATH(String.class, "/home/lane/Documents/Coding/ThinkingProject/ImageUploadPath/article/"),
+	ARTICLE_IMAGE_UPLOAD_PATH(String.class, "/home/lane/Documents/Coding/ToGit/ThinkingProject/ImageUploadPath/article/"),
 	TAG(String.class, "/editorimages/");
 	private final Class<?> type;
 	private final Object value;

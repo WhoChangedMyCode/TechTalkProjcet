@@ -11,8 +11,8 @@
     <groupId>org.soft.base</groupId>
     <artifactId>User</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>thinking</name>
-    <description>thinking</description>
+    <name>User</name>
+    <description>User</description>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

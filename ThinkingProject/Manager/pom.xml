@@ -11,8 +11,8 @@
 	<groupId>org.soft.base</groupId>
 	<artifactId>Manager</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>ThinkingManage</name>
-	<description>ThinkingManage</description>
+	<name>Manager</name>
+	<description>Manager</description>
 	<properties>
 		<java.version>17</java.version>
 	</properties>

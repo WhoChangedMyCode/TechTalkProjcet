@@ -8,8 +8,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication
 
-public class ThinkingApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(ThinkingApplication.class, args);
-    }
+public class UserApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(UserApplication.class, args);
+	}
 }

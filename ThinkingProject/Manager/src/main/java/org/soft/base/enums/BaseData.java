@@ -9,12 +9,12 @@ public enum BaseData {
 	/**
 	 * 管理員頭像上傳路經
 	 */
-	AVATAR_PATH(String.class, "/home/lane/Documents/Coding/ThinkingProject/ImageUploadPath/avatar/"),
+	AVATAR_PATH(String.class, "/home/lane/Documents/Coding/ToGit/ThinkingProject/ImageUploadPath/avatar"),
 
 	/**
 	 * 公告圖片上傳路經
 	 */
-	ANNOUNCEMENT_PATH(String.class, "/home/lane/Documents/Coding/ThinkingProject/ImageUploadPath/announcement/"),
+	ANNOUNCEMENT_PATH(String.class, "/home/lane/Documents/Coding/ToGit/ThinkingProject/ImageUploadPath/announcement/"),
 
 	/**
 	 * 公告管理分每頁數據量
